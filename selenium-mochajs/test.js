@@ -20,7 +20,7 @@ const chrome = require('selenium-webdriver/chrome');
 
 describe('Selenium ChromeDriver', function () {
   let driver;
-  // The chrome and chromedriver installation can take some time. 
+  // The chrome and chromedriver installation can take some time.
   // Give 5 minutes to install everything.
   this.timeout(5 * 60 * 1000);
 
@@ -58,7 +58,37 @@ describe('Selenium ChromeDriver', function () {
     expect(title).toBe('Google');
   });
 
-  it('ISSUE REPRODUCTION', async function () {
-    // Add test reproducing the issue here.
+  it('should drag and drop text', async function () {
+    const path = require('path');
+    const url = `file://${path.join(__dirname, 'example.html')}`;
+    await driver.get(url);
+
+    const dragInput = await driver.findElement({ id: 'copy-drag' });
+    const dropDiv = await driver.findElement({ id: 'copy-drop' });
+
+    // Select the text before drag
+    await driver.executeScript(function () {
+      const dragInput = document.getElementById('copy-drag');
+      dragInput.select();
+      dragInput.focus();
+    });
+
+    const actions = driver.actions({ async: true });
+    await actions
+      .move({ origin: dragInput })
+      .press()
+      .move({ origin: dropDiv })
+      .release()
+      .perform();
+
+    const result = await driver.executeScript(function () {
+      return window.dropEffectOnDrop;
+    });
+
+    expect(result).toBe('copy');
+  });
+
+  before(function () {
+    global.dropEffectOnDrop = null;
   });
 });
