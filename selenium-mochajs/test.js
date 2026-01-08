@@ -26,7 +26,7 @@ describe('Selenium ChromeDriver', function () {
 
   beforeEach(async function () {
     const options = new chrome.Options();
-    options.addArguments('--headless');
+    // options.addArguments('--headless');
     options.addArguments('--no-sandbox');
 
     // By default, the test uses the latest stable Chrome version.
