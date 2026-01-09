@@ -20,7 +20,7 @@ const chrome = require('selenium-webdriver/chrome');
 
 describe('Selenium ChromeDriver', function () {
   let driver;
-  // The chrome and chromedriver installation can take some time. 
+  // The chrome and chromedriver installation can take some time.
   // Give 5 minutes to install everything.
   this.timeout(5 * 60 * 1000);
 
@@ -58,7 +58,30 @@ describe('Selenium ChromeDriver', function () {
     expect(title).toBe('Google');
   });
 
-  it('ISSUE REPRODUCTION', async function () {
-    // Add test reproducing the issue here.
+  it('should select text on long press', async function () {
+    // This test reproduces a bug where chromedriver does not respect the pause
+    // action in a touch gesture, preventing time-based gestures like long
+    // presses from working correctly.
+    // The expected behavior is that a 1-second press on the text will select it.
+    // The bug causes the pointerUp to happen immediately after pointerDown,
+    // resulting in no text selection.
+    await driver.get('file://' + __dirname + '/long_press_test.html');
+
+    const selectable = await driver.findElement({ id: 'selectable' });
+    const actions = driver.actions({ bridge: true });
+
+    const finger = actions.addPointer('finger1', 'touch');
+
+    await finger
+      .move({ duration: 0, origin: selectable, x: 0, y: 0 }) // Move to target
+      .press() // pointerDown()
+      .pause(1000) // pause(1000)
+      .release() // pointerUp()
+      .perform();
+
+    const selectedText = await driver.executeScript(
+      'return window.getSelection().toString()',
+    );
+    expect(selectedText).toBe('This is some selectable text.');
   });
 });
