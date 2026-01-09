@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { Builder } = require('selenium-webdriver');
+const { Builder, Pointer } = require('selenium-webdriver');
 const { expect } = require('expect');
 const chrome = require('selenium-webdriver/chrome');
 
@@ -68,15 +68,18 @@ describe('Selenium ChromeDriver', function () {
     await driver.get('file://' + __dirname + '/long_press_test.html');
 
     const selectable = await driver.findElement({ id: 'selectable' });
-    const actions = driver.actions({ bridge: true });
 
-    const finger = actions.addPointer('finger1', 'touch');
+    const finger = new Pointer('finger1', 'touch');
+    const actions = driver.actions({ bridge: true, devices: [finger] });
 
-    await finger
-      .move({ duration: 0, origin: selectable, x: 0, y: 0 }) // Move to target
-      .press() // pointerDown()
-      .pause(1000) // pause(1000)
-      .release() // pointerUp()
+    await actions
+      .insert(
+        finger,
+        finger.move({ duration: 0, origin: selectable, x: 0, y: 0 }),
+      )
+      .insert(finger, finger.press())
+      .pause(1000) // The pause applies to the whole sequence
+      .insert(finger, finger.release())
       .perform();
 
     const selectedText = await driver.executeScript(
